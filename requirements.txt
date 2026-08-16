@@ -1,0 +1,22 @@
+# Standalone connector dependencies — the whole service, and nothing
+# else. Deliberately does NOT inherit the host application's
+# requirements: the connector is meant to deploy on its own, so it
+# carries only what its own code imports. Versions are pinned to what
+# this repository is tested against.
+
+# Web service
+fastapi==0.135.2
+uvicorn[standard]==0.42.0
+
+# Microsoft Bot Framework — sending, receiving, JWT validation
+botbuilder-core==4.17.1
+botbuilder-schema==4.17.1
+
+# Outbound forwarding to the attached endpoint
+httpx==0.28.1
+
+# PostgreSQL storage. SQLite (the alternative) uses the standard
+# library and needs nothing here; drop these two lines if you deploy
+# with CONNECTOR_DATABASE_URL=sqlite:///…
+psycopg==3.3.3
+psycopg-pool==3.3.0

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teams-connector"
+version = "0.1.0"
+description = "Microsoft Teams <-> any HTTP endpoint: channel threads, mentions, rosters, inbound webhook."
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["connector", "connector.store"]
+
+[tool.setuptools.package-data]
+"connector.store" = ["schema.sql"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

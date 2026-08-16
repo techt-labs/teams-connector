@@ -1,0 +1,25 @@
+# Teams connector — one-command run.
+#   cp .env.example .env   &&   edit   &&   docker compose up --build
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-connector}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-connector}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-connector}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  connector:
+    build: {context: ., dockerfile: Dockerfile}
+    env_file: [.env]
+    environment:
+      CONNECTOR_DATABASE_URL: postgresql://${POSTGRES_USER:-connector}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-connector}
+    ports: ["${CONNECTOR_PORT:-8000}:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+volumes:
+  pgdata:
