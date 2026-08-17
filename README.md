@@ -1,5 +1,25 @@
 # Microsoft Teams Connector
 
+> **This repo is one of two.** The full bridge that lets an agent ask a
+> human in Teams and get the answer back is:
+>
+> ```
+> ┌───────────────────┐   ┌───────────────┐   ┌─────────────────┐   ┌──────────────┐
+> │ Microsoft 365      │◄─►│  connector    │◄─►│  MCP server     │◄─►│  your agent  │
+> │ Teams + Azure Bot  │   │  ★ THIS REPO  │   │ teams-agent-mcp │   │ SaaS/in-house│
+> └───────────────────┘   └───────────────┘   └─────────────────┘   └──────────────┘
+> ```
+>
+> - **Use this repo alone** if you just want Teams ↔ your own HTTP
+>   endpoint (receive every message, post threads/replies) — no agent
+>   tooling involved.
+> - **Use both repos** for the agent experience (`ask_human` tools,
+>   reply-to-session correlation): deploy this one **first**, then its
+>   companion **[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp)**,
+>   which is a client of this service.
+>
+> Deploy order and wiring are in [`GETTING_STARTED.md`](GETTING_STARTED.md).
+
 A small, self-contained service that connects Microsoft Teams to
 whatever system you want on the other end.
 

@@ -112,6 +112,19 @@ curl -X POST $BASE/api/connector/threads \
 All three good → the connector is live. The `README.md` documents every
 endpoint and the design behind it.
 
+## Step 7 — Next: the MCP server (for the agent experience)
+
+This connector is half of the bridge. To let an **agent** ask humans in
+Teams and receive answers back into its session, now deploy the
+companion repo —
+**[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp)** —
+following *its* `GETTING_STARTED.md`. It will need two values from this
+deployment: this connector's **base URL** and its
+**`CONNECTOR_API_TOKEN`**; and you will set this connector's
+`CONNECTOR_INBOUND_URL` to point at it. (If you only wanted Teams ↔
+your own HTTP endpoint, you are done — point `CONNECTOR_INBOUND_URL` at
+your endpoint instead.)
+
 ## Troubleshooting the usual first-run failures
 
 | Symptom | Cause → fix |
