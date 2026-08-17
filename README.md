@@ -82,6 +82,43 @@ endpoints 4, 5, 6, 7.
 That is the complete surface — nothing else listens, nothing else is
 called.
 
+## Using both repos: how this connects to teams-agent-mcp
+
+When this connector pairs with
+[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp), the
+entire integration is **two HTTP links and two shared tokens** — there
+is no other coupling (no shared database, no shared code):
+
+```
+            OUTBOUND (the agent asks)
+   mcp-server ──────────────────────────────► this connector
+     calls: GET /api/connector/channels ·  GET /members
+            POST /threads               ·  POST /say
+     auth:  Authorization: Bearer CONNECTOR_API_TOKEN
+
+            INBOUND (a human answers)
+   this connector ──────────────────────────► mcp-server
+     calls: POST {CONNECTOR_INBOUND_URL}   (= its /teams-inbound)
+     body:  {conversation_id, text, speaker, speaker_email, source}
+     auth:  Authorization: Bearer CONNECTOR_INBOUND_TOKEN
+```
+
+The four configuration lines that make it work — two on each side:
+
+| Where | Setting | Must be |
+|---|---|---|
+| **mcp-server** | `CONNECTOR_BASE_URL` | this connector's base URL |
+| **mcp-server** | `CONNECTOR_API_TOKEN` | **identical** to this connector's `CONNECTOR_API_TOKEN` |
+| **this connector** | `CONNECTOR_INBOUND_URL` | `https://<mcp-host>/teams-inbound` |
+| **this connector** | `CONNECTOR_INBOUND_TOKEN` | **identical** to the mcp-server's `MCP_INBOUND_TOKEN` |
+
+Deploy order: this connector first (the mcp-server cannot start its
+work without a connector to call), then the mcp-server, then come back
+and set `CONNECTOR_INBOUND_URL` here — the loop is closed at that
+moment. If either token pair mismatches, the symptom is a 401 in the
+callee's log; if `CONNECTOR_INBOUND_URL` is empty, outbound asking
+still works but every human reply is received and dropped here.
+
 ## What it does not do
 
 No language model runs here. The connector does not decide what to say,
