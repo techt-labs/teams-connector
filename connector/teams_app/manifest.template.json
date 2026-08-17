@@ -1,0 +1,49 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "${TEAMS_APP_ID}",
+  "packageName": "com.example.teamsconnector",
+  "developer": {
+    "name": "${YOUR_ORG_NAME}",
+    "websiteUrl": "https://${YOUR_CONNECTOR_HOST}",
+    "privacyUrl": "https://${YOUR_CONNECTOR_HOST}/privacy",
+    "termsOfUseUrl": "https://${YOUR_CONNECTOR_HOST}/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "${YOUR_APP_NAME}",
+    "full": "${YOUR_APP_NAME}"
+  },
+  "description": {
+    "short": "Bridges this team's channels to your organization's agent.",
+    "full": "Lets an authorized agent post questions into channels this app is added to, @-mention members, and receive their replies. Installed per team by a team owner; it can only see conversations it is explicitly added to."
+  },
+  "accentColor": "#3B4EAF",
+  "bots": [
+    {
+      "botId": "${TEAMS_APP_ID}",
+      "scopes": ["personal", "team", "groupchat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "validDomains": [],
+  "webApplicationInfo": {
+    "id": "${TEAMS_APP_ID}",
+    "resource": "https://RscBasedStoreApp"
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        { "name": "ChannelMessage.Read.Group", "type": "Application" },
+        { "name": "ChannelMessage.Send.Group", "type": "Application" },
+        { "name": "TeamMember.Read.Group", "type": "Application" },
+        { "name": "ChatMessage.Read.Chat", "type": "Application" }
+      ]
+    }
+  }
+}

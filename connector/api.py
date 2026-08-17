@@ -20,8 +20,8 @@ question, not a code one:
 
 Both speak this same API, so nothing here depends on which is used.
 
-Five endpoints: where can I speak, where can I start something, start
-it, speak there, forget that place. There is no ``/bind`` and no
+Seven endpoints: health, where can I speak (conversations/channels),
+who is there (members), start a thread, speak there, forget a place. There is no ``/bind`` and no
 session id anywhere in this file — the caller passes the
 ``conversation_id`` it received when it started a thread, or the one
 that arrived on the inbound side, and keeps its own record of which of

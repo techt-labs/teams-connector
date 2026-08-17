@@ -1,11 +1,11 @@
 # Standalone connector image.
 #
-# Build context is the `server/` directory, because the connector is a
-# package under it (`connector/`) and imports itself absolutely
-# (`from connector import …`). Build from there so the package resolves:
+# Build from the directory that CONTAINS the `connector/` package (the
+# repo root in the standalone repo; `server/` in the source monorepo) —
+# the package imports itself absolutely:
 #
 #     docker build -t teams-connector .
-#     docker run -p 8000:8000 --env-file connector/.env teams-connector
+#     docker run -p 8000:8000 --env-file .env teams-connector
 #
 # The same image runs unchanged on Azure App Service (Web App for
 # Containers), Azure Container Apps, or any Kubernetes ingress — the

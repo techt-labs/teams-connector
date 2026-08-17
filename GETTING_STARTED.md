@@ -49,10 +49,11 @@ cp .env.example .env      # then edit .env
 | Variable | Set it to |
 |---|---|
 | `TEAMS_APP_ID` / `TEAMS_APP_PASSWORD` / `TEAMS_TENANT_ID` | the Step-1 values |
-| `CONNECTOR_DATABASE_URL` | the Step-2 connection string |
+| `CONNECTOR_DATABASE_URL` | the Step-2 connection string — **only when running without Docker**; under `docker compose` leave it commented out (compose assembles it from the `POSTGRES_*` values) |
 | `CONNECTOR_API_TOKEN` | generate: `python3 -c "import secrets; print(secrets.token_urlsafe(32))"` — callers of this connector's API must present it |
-| `CONNECTOR_INBOUND_URL` | where inbound Teams messages are forwarded — for the agent bridge, the mcp-server's `https://<mcp-host>/teams-inbound` |
-| `CONNECTOR_INBOUND_TOKEN` | generate another token; the receiving service must expect the same one |
+| `POSTGRES_PASSWORD` | choose a strong password — **required** by `docker compose` (it runs the database container with it) |
+| `CONNECTOR_INBOUND_URL` | **leave empty for now** — this is where inbound Teams messages get forwarded (the mcp-server's `/teams-inbound`), and that service does not exist yet; its guide sends you back here to fill it in |
+| `CONNECTOR_INBOUND_TOKEN` | generate another token now; the receiving service will be configured with the same one |
 
 Keep every secret in your secret store (Azure Key Vault) in real
 deployments; `.env` is the local-file form of the same settings.
@@ -65,10 +66,13 @@ deployments; `.env` is the local-file form of the same settings.
 docker compose up --build
 ```
 
-**Or directly (your own Python 3.11+):**
+**Or directly (your own Python 3.11+):** the service reads plain
+environment variables (it does not load `.env` by itself — Docker does
+that), so export them first:
 
 ```bash
 pip install -r requirements.txt
+set -a; source .env; set +a          # export everything in .env
 uvicorn connector.app:app --host 0.0.0.0 --port 8000
 ```
 
@@ -82,10 +86,13 @@ the next step needs.
    (App Service URL, or your gateway).
 2. Azure portal → your **Azure Bot** → **Configuration** →
    **Messaging endpoint** = `https://<your-host>/api/messages`
-3. Upload the Teams app package to the **Teams admin center** and have a
-   **team owner** add the app to the channel where questions will be
-   asked. (No tenant-admin Graph consent is involved — the team-owner
-   install *is* the permission grant.)
+3. Build and upload the **Teams app package** — the manifest template,
+   the four RSC permissions explained, icon specs, the zip command, and
+   the admin-center upload steps are all in
+   [`connector/teams_app/README.md`](connector/teams_app/README.md).
+   Then a **team owner** adds the app to the channel where questions
+   will be asked. (No tenant-admin Graph consent is involved — the
+   team-owner install *is* the permission grant.)
 4. Post one message in that channel — that first activity is how the
    connector learns the channel exists.
 
@@ -97,7 +104,8 @@ BASE=https://<your-host>
 
 # alive and credentialed?
 curl -H "Authorization: Bearer $TOKEN" $BASE/api/connector/health
-#  → {"storage":true,"forwarding_configured":true,"teams_configured":true}
+#  → {"storage":true,"forwarding_configured":false,"teams_configured":true}
+#    (forwarding_configured flips to true after Step 7 wires the mcp-server)
 
 # did Step 5.4 register the channel?
 curl -H "Authorization: Bearer $TOKEN" $BASE/api/connector/channels

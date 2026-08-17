@@ -36,20 +36,51 @@ a conversation reference that still works days later, and posting back
 into a channel long after the original request ended. This package does
 that, and deliberately nothing else.
 
-## Why it is a separate component
+## Why it is this narrow
 
-The repository around it ships a homegrown assessment assistant that
-uses this connector. That assistant is a *reference implementation*, not
-a dependency. Nothing under `connector/` imports it, and a smoke test
-enforces that mechanically — a boundary maintained only by good
-intentions stops being true the first time someone is in a hurry.
-
-So you can take this directory, drop it into your own service, and
-attach your own tool. That is the intended use.
+The connector is developed inside a larger source monorepo whose host
+application consumes it — but nothing under `connector/` imports that
+host, and a smoke test enforces the boundary mechanically (a boundary
+maintained only by good intentions stops being true the first time
+someone is in a hurry). This repo is the connector lifted out whole:
+attach your own system and it neither knows nor cares.
 
 **Documentation map:** deploy step-by-step →
 [`GETTING_STARTED.md`](GETTING_STARTED.md) · the database →
-[`DATABASE.md`](DATABASE.md) · architecture & APIs → this file.
+[`DATABASE.md`](DATABASE.md) · the Teams app package →
+[`connector/teams_app/README.md`](connector/teams_app/README.md) ·
+architecture & APIs → this file.
+
+## Every API, at a glance
+
+**This service EXPOSES 8 endpoints** — 1 for Microsoft, 7 for your
+system:
+
+| # | Endpoint | Who calls it | What it does |
+|---|---|---|---|
+| 1 | `POST /api/messages` | **Azure Bot Service** (JWT-signed) | every Teams activity arrives here — the bot's messaging endpoint |
+| 2 | `GET /api/connector/health` | your system / operators | readiness: storage, forwarding, Teams creds |
+| 3 | `GET /api/connector/conversations` | your system | every conversation the bot can post into |
+| 4 | `GET /api/connector/channels` | your system | just the channels (where new threads can start) |
+| 5 | `GET /api/connector/members` | your system | people in a channel, with the ids @-mentions need |
+| 6 | `POST /api/connector/threads` | your system | start a new channel thread; returns its id |
+| 7 | `POST /api/connector/say` | your system | post a reply into an existing conversation |
+| 8 | `POST /api/connector/forget` | your system | erase everything held about one conversation |
+
+Endpoints 2–8 require `Authorization: Bearer <CONNECTOR_API_TOKEN>`.
+"Your system" is whatever you attach — the companion
+[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp) uses
+endpoints 4, 5, 6, 7.
+
+**This service CALLS 2 things:**
+
+| Direction | Where | When |
+|---|---|---|
+| → Microsoft Bot Framework | `login.microsoftonline.com` + the regional `smba.trafficmanager.net` endpoint | posting every thread/reply, reading rosters |
+| → `CONNECTOR_INBOUND_URL` | one `POST` of `{conversation_id, text, speaker, speaker_email, source}` | forwarding each inbound human message to your system |
+
+That is the complete surface — nothing else listens, nothing else is
+called.
 
 ## What it does not do
 
@@ -97,8 +128,8 @@ Any 2xx means accepted. Your endpoint looks up which of its sessions
 care about that conversation and wakes them. To speak back, call
 `POST /api/connector/say` with the same `conversation_id`.
 
-**By code**, when your handler runs in the same process — this is how
-the assistant in this repository attaches:
+**By code**, when your handler runs in the same process (for a host
+application that embeds the package):
 
 ```python
 import connector
@@ -120,6 +151,7 @@ tenant as the bot.
 | `GET`  | `/api/connector/health` | Storage, forwarding and Teams readiness |
 | `GET`  | `/api/connector/conversations` | Conversations the bot can post into |
 | `GET`  | `/api/connector/channels` | Channels a new thread can start in |
+| `GET`  | `/api/connector/members` | People in a channel (ids for mentions) |
 | `POST` | `/api/connector/threads` | Start a thread; returns its address |
 | `POST` | `/api/connector/say` | Post text into a conversation |
 | `POST` | `/api/connector/forget` | Erase one conversation |
