@@ -47,6 +47,10 @@ intentions stops being true the first time someone is in a hurry.
 So you can take this directory, drop it into your own service, and
 attach your own tool. That is the intended use.
 
+**Documentation map:** deploy step-by-step →
+[`GETTING_STARTED.md`](GETTING_STARTED.md) · the database →
+[`DATABASE.md`](DATABASE.md) · architecture & APIs → this file.
+
 ## What it does not do
 
 No language model runs here. The connector does not decide what to say,
@@ -183,7 +187,10 @@ to group chats, which do require one.
 
 ## Storage
 
-One table, `connector_conversations`. The DDL in `store/schema.sql` is
+One table, `connector_conversations` — the full annotated DDL, column
+meanings, sizing and retention notes are in
+[`DATABASE.md`](DATABASE.md), written to be handed to a database team.
+The DDL itself (`connector/store/schema.sql`) is
 valid PostgreSQL and can be handed to a DBA as-is; no extensions, no
 pgvector, no JSONB.
 
@@ -203,15 +210,22 @@ restarts. Rows appear only when the bot is spoken to, which is the
 containment property: it can address exactly the conversations it was
 added to, and no call can widen that set.
 
-## Running it as its own service
+## Running it
 
-The connector deploys on its own, with no host application. `app.py` is
-the entry point and mounts both halves — the outbound API and the
-inbound Teams webhook:
+Deployment step-by-step (including every Azure value and where it comes
+from) lives in [`GETTING_STARTED.md`](GETTING_STARTED.md); the database
+DDL and its reasoning in [`DATABASE.md`](DATABASE.md). The short form:
+
+```bash
+cp .env.example .env      # fill in — see GETTING_STARTED.md
+docker compose up --build # service + PostgreSQL, one command
+```
+
+or without Docker (Python 3.11+):
 
 ```bash
 pip install -r requirements.txt
-uvicorn connector.app:app --host 0.0.0.0 --port 8000    # from server/
+uvicorn connector.app:app --host 0.0.0.0 --port 8000
 ```
 
 Two endpoints face outward:
@@ -231,13 +245,11 @@ dependency.
 
 ### Container
 
-The `Dockerfile` builds the same image for any container platform.
-Build context is `server/` because the package imports itself
-absolutely:
+The `Dockerfile` builds the same image for any container platform:
 
 ```bash
-docker build -f connector/Dockerfile -t teams-connector server/
-docker run -p 8000:8000 --env-file connector/.env teams-connector
+docker build -t teams-connector .
+docker run -p 8000:8000 --env-file .env teams-connector
 ```
 
 On **Azure App Service (Web App for Containers)** or **Azure Container
@@ -281,24 +293,15 @@ below). This is a map for anyone reading or reviewing the code.
 
 ## Tests
 
-```bash
-python3 tests/test_phase17_connector_smoke.py       # boundary + fails closed
-python3 tests/test_phase18_channel_thread_smoke.py  # threads + mentions
-```
+This package is developed in a source monorepo whose smoke suite runs
+on every change: the liftability boundary (no host imports, verified in
+a bare subprocess), fail-closed auth, thread creation, mention
+rendering, and store round-trips on both SQLite and PostgreSQL. Per-repo
+CI is on the roadmap; until then the monorepo suite is the contract.
 
-Both run against SQLite with no setup. Set `DATABASE_URL` to also
-exercise PostgreSQL; the tests remove every row they create.
-
-Two things cannot be proven without Microsoft: that a bot with no admin
-consent can create a channel thread, and that the id returned at
-creation is the id replies carry. A live check covers both and needs a
-channel, a human, and a few minutes:
-
-```bash
-CONNECTOR_API_TOKEN=... python3 scripts/teams_channel_thread_check.py \
-    --server http://localhost:8000 \
-    --mention '<aad-object-id>:Ann Lee:ann@example.com'
-```
-
-It listens for the forwarded reply itself, so point
-`CONNECTOR_INBOUND_URL` at it first. Exits non-zero on any mismatch.
+Two things cannot be proven without Microsoft: that a bot with no
+tenant-admin consent can create a channel thread, and that the id
+returned at creation is the id replies carry. Both have been verified
+against a real tenant. To re-verify in *yours*, run the three curl
+checks in [`GETTING_STARTED.md`](GETTING_STARTED.md) Step 6 and reply
+to the smoke-test thread.
