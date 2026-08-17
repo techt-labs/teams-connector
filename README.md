@@ -15,7 +15,7 @@
 >   tooling involved.
 > - **Use both repos** for the agent experience (`ask_human` tools,
 >   reply-to-session correlation): deploy this one **first**, then its
->   companion **[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp)**,
+>   companion **[teams-agent-mcp](https://github.com/techtdev-labs/teams-agent-mcp)**,
 >   which is a client of this service.
 >
 > Deploy order and wiring are in [`GETTING_STARTED.md`](GETTING_STARTED.md).
@@ -69,7 +69,7 @@ system:
 
 Endpoints 2–8 require `Authorization: Bearer <CONNECTOR_API_TOKEN>`.
 "Your system" is whatever you attach — the companion
-[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp) uses
+[teams-agent-mcp](https://github.com/techtdev-labs/teams-agent-mcp) uses
 endpoints 4, 5, 6, 7.
 
 **This service CALLS 2 things:**
@@ -85,7 +85,7 @@ called.
 ## Using both repos: how this connects to teams-agent-mcp
 
 When this connector pairs with
-[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp), the
+[teams-agent-mcp](https://github.com/techtdev-labs/teams-agent-mcp), the
 entire integration is **two HTTP links and two shared tokens** — there
 is no other coupling (no shared database, no shared code):
 

@@ -125,7 +125,7 @@ endpoint and the design behind it.
 This connector is half of the bridge. To let an **agent** ask humans in
 Teams and receive answers back into its session, now deploy the
 companion repo —
-**[teams-agent-mcp](https://github.com/techt-labs/teams-agent-mcp)** —
+**[teams-agent-mcp](https://github.com/techtdev-labs/teams-agent-mcp)** —
 following *its* `GETTING_STARTED.md`. It will need two values from this
 deployment: this connector's **base URL** and its
 **`CONNECTOR_API_TOKEN`**; and you will set this connector's
